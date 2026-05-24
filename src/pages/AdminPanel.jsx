@@ -2,26 +2,30 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 
-// ── Tokens visuales ────────────────────────────────────────────
-const GREEN = '#4c9a2a'
-const DARK_BG = '#1a1a1a'
-const SIDEBAR_BG = '#111111'
-const PANEL_BG = '#2a2a2a'
-const BORDER = '#3a3a3a'
-const TEXT_PRIMARY = '#e8e8e8'
-const TEXT_MUTED = '#888'
-const TEXT_LABEL = '#aaa'
-const RED = '#c0392b'
-const FONT = "'Lucida Grande', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+/* ── Paleta Spotify ─────────────────────────────────────────── */
+const S = {
+  green:      '#1db954',
+  greenDark:  '#1aa34a',
+  black:      '#000000',
+  bg:         '#121212',
+  surface:    '#181818',
+  elevated:   '#282828',
+  border:     '#282828',
+  borderHov:  '#3e3e3e',
+  text:       '#ffffff',
+  textMuted:  '#b3b3b3',
+  textSubtle: '#6a6a6a',
+  red:        '#e5534b',
+}
+const FONT = "'Circular','Inter','Helvetica Neue',Helvetica,Arial,sans-serif"
 
-// ── Datos de muestra ───────────────────────────────────────────
+/* ── Datos de muestra ───────────────────────────────────────── */
 const MOCK_USERS = [
   { id: 'u1', email: 'carlos@ejemplo.com',  role: 'user',  joined: '2024-01-10', status: 'activo'   },
   { id: 'u2', email: 'ana@ejemplo.com',     role: 'user',  joined: '2024-02-14', status: 'activo'   },
   { id: 'u3', email: 'luis@ejemplo.com',    role: 'admin', joined: '2023-11-05', status: 'activo'   },
   { id: 'u4', email: 'maria@ejemplo.com',   role: 'user',  joined: '2024-03-22', status: 'inactivo' },
 ]
-
 const MOCK_SONGS = [
   { id: 's1', title: 'Uninvited',           artist: 'Alanis Morissette', duration: '4:18', plays: 1240 },
   { id: 's2', title: 'Creep',               artist: 'Radiohead',          duration: '3:56', plays: 987  },
@@ -29,136 +33,215 @@ const MOCK_SONGS = [
   { id: 's4', title: 'No Surprises',        artist: 'Radiohead',          duration: '3:48', plays: 723  },
   { id: 's5', title: 'With or Without You', artist: 'U2',                 duration: '4:56', plays: 612  },
 ]
-
 const MOCK_PLAYLISTS = [
-  { id: 'p1', name: 'Top 2006',      owner: 'carlos@ejemplo.com', tracks: 15 },
-  { id: 'p2', name: 'Para el gym',   owner: 'ana@ejemplo.com',    tracks: 8  },
-  { id: 'p3', name: 'Chill vibes',   owner: 'ana@ejemplo.com',    tracks: 20 },
-  { id: 'p4', name: 'Rock clásico',  owner: 'luis@ejemplo.com',   tracks: 12 },
+  { id: 'p1', name: 'Top 2006',     owner: 'carlos@ejemplo.com', tracks: 15 },
+  { id: 'p2', name: 'Para el gym',  owner: 'ana@ejemplo.com',    tracks: 8  },
+  { id: 'p3', name: 'Chill vibes',  owner: 'ana@ejemplo.com',    tracks: 20 },
+  { id: 'p4', name: 'Rock clásico', owner: 'luis@ejemplo.com',   tracks: 12 },
 ]
-
 const GLOBAL_STATS = [
-  { label: 'Usuarios totales',       value: '4'    },
-  { label: 'Canciones en catálogo',  value: '5'    },
-  { label: 'Reproducciones totales', value: '4.4K' },
-  { label: 'Playlists creadas',      value: '4'    },
+  { label: 'Usuarios totales',       value: '4',    icon: '👥' },
+  { label: 'Canciones en catálogo',  value: '5',    icon: '🎵' },
+  { label: 'Reproducciones totales', value: '4.4K', icon: '▶' },
+  { label: 'Playlists creadas',      value: '4',    icon: '📋' },
 ]
 
-// ── Componente principal ───────────────────────────────────────
+/* ── Componente principal ───────────────────────────────────── */
 export default function AdminPanel() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab]   = useState('stats')
-  const [adminUser, setAdminUser]   = useState(null)
-  const [users, setUsers]           = useState(MOCK_USERS)
-  const [songs, setSongs]           = useState(MOCK_SONGS)
-  const [playlists, setPlaylists]   = useState(MOCK_PLAYLISTS)
-
-  // Formulario nueva canción
-  const [newSong, setNewSong] = useState({ title: '', artist: '', duration: '' })
+  const [activeTab, setActiveTab] = useState('stats')
+  const [adminUser, setAdminUser] = useState(null)
+  const [users,     setUsers]     = useState(MOCK_USERS)
+  const [songs,     setSongs]     = useState(MOCK_SONGS)
+  const [playlists, setPlaylists] = useState(MOCK_PLAYLISTS)
+  const [newSong,   setNewSong]   = useState({ title: '', artist: '', duration: '' })
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setAdminUser(data?.user ?? null))
   }, [])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    navigate('/')
-  }
-
-  const deleteUser    = (id) => setUsers(prev => prev.filter(u => u.id !== id))
-  const deleteSong    = (id) => setSongs(prev => prev.filter(s => s.id !== id))
+  const handleLogout   = async () => { await supabase.auth.signOut(); navigate('/') }
+  const deleteUser     = (id) => setUsers(prev     => prev.filter(u => u.id !== id))
+  const deleteSong     = (id) => setSongs(prev     => prev.filter(s => s.id !== id))
   const deletePlaylist = (id) => setPlaylists(prev => prev.filter(p => p.id !== id))
-
-  const toggleRole = (id) =>
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, role: u.role === 'admin' ? 'user' : 'admin' } : u))
-
+  const toggleRole     = (id) => setUsers(prev => prev.map(u =>
+    u.id === id ? { ...u, role: u.role === 'admin' ? 'user' : 'admin' } : u
+  ))
   const addSong = () => {
     if (!newSong.title.trim() || !newSong.artist.trim()) return
     setSongs(prev => [...prev, { id: `s${Date.now()}`, ...newSong, plays: 0 }])
     setNewSong({ title: '', artist: '', duration: '' })
   }
 
+  const NAV_ITEMS = [
+    { id: 'stats',     icon: '📊', label: 'Estadísticas' },
+    { id: 'users',     icon: '👥', label: 'Usuarios'      },
+    { id: 'songs',     icon: '🎵', label: 'Canciones'     },
+    { id: 'playlists', icon: '📋', label: 'Playlists'     },
+  ]
+
   return (
-    <div style={{ background: DARK_BG, minHeight: '100vh', fontFamily: FONT, fontSize: '11px', color: TEXT_PRIMARY }}>
+    <div style={{
+      background: S.bg,
+      minHeight: '100vh',
+      fontFamily: FONT,
+      fontSize: '13px',
+      color: S.text,
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
 
       {/* ── Titlebar ── */}
-      <div style={{ background: 'linear-gradient(to bottom,#3a3a3a,#2c2c2c)', padding: '0 10px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #111' }}>
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          {['#ff5f57','#febc2e','#28c840'].map((c,i) => (
-            <div key={i} style={{ width: '11px', height: '11px', borderRadius: '50%', background: c }} />
+      <div style={{
+        background: '#000',
+        height: '36px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        borderBottom: `1px solid ${S.border}`,
+        flexShrink: 0,
+        zIndex: 10,
+      }}>
+        {/* Semáforo */}
+        <div style={{ display: 'flex', gap: '7px', alignItems: 'center' }}>
+          {['#ff5f57','#febc2e','#28c840'].map((c, i) => (
+            <div key={i} style={{ width: '12px', height: '12px', borderRadius: '50%', background: c }} />
           ))}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ background: '#3d7a22', color: '#fff', fontSize: '9px', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Admin</span>
-          <span style={{ color: TEXT_MUTED, fontSize: '11px' }}>Spotify — Panel de administración</span>
+
+        {/* Centro: logo + badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={S.green}>
+            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+          </svg>
+          <span style={{ color: S.text, fontWeight: '700', fontSize: '13px' }}>Spotify</span>
+          <span style={{
+            background: S.green,
+            color: '#000',
+            fontSize: '9px',
+            fontWeight: '700',
+            padding: '2px 8px',
+            borderRadius: '500px',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+          }}>Admin</span>
         </div>
-        <button onClick={handleLogout} style={sysBtnStyle}>Cerrar sesión</button>
+
+        {/* Cerrar sesión */}
+        <button onClick={handleLogout} style={css.sysBtn}>Cerrar sesión</button>
       </div>
 
       {/* ── Layout ── */}
-      <div style={{ display: 'flex', height: 'calc(100vh - 28px)' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: 'calc(100vh - 36px)' }}>
 
         {/* ── Sidebar ── */}
-        <div style={{ width: '180px', background: SIDEBAR_BG, borderRight: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', padding: '12px 0', flexShrink: 0 }}>
-          <div style={{ textAlign: 'center', padding: '0 12px 16px', borderBottom: `1px solid ${BORDER}` }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#2a2a2a', border: `2px solid ${GREEN}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', margin: '0 auto 6px' }}>⚙️</div>
-            <p style={{ color: TEXT_PRIMARY, fontWeight: 'bold', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{
+          width: '220px',
+          background: '#000',
+          borderRight: `1px solid ${S.border}`,
+          display: 'flex',
+          flexDirection: 'column',
+          flexShrink: 0,
+          paddingTop: '8px',
+        }}>
+          {/* Avatar admin */}
+          <div style={{
+            textAlign: 'center',
+            padding: '16px 16px 20px',
+            borderBottom: `1px solid ${S.border}`,
+          }}>
+            <div style={{
+              width: '60px', height: '60px',
+              borderRadius: '50%',
+              background: S.elevated,
+              border: `2px solid ${S.green}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '24px',
+              margin: '0 auto 10px',
+            }}>⚙️</div>
+            <p style={{ color: S.text, fontWeight: '700', fontSize: '13px', margin: '0 0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', padding: '0 8px' }}>
               {adminUser?.email?.split('@')[0] ?? 'Admin'}
             </p>
-            <p style={{ color: GREEN, fontSize: '10px', marginTop: '2px' }}>Administrador</p>
+            <p style={{ color: S.green, fontSize: '11px', margin: 0, fontWeight: '600' }}>Administrador</p>
           </div>
 
-          <div style={{ marginTop: '8px' }}>
-            <SideLabel>ADMINISTRACIÓN</SideLabel>
-            {[
-              { id: 'stats',     icon: '📊', label: 'Estadísticas'  },
-              { id: 'users',     icon: '👥', label: 'Usuarios'       },
-              { id: 'songs',     icon: '🎵', label: 'Canciones'      },
-              { id: 'playlists', icon: '📋', label: 'Playlists'      },
-            ].map(item => (
-              <NavItem key={item.id} active={activeTab === item.id} onClick={() => setActiveTab(item.id)}>
-                <span style={{ fontSize: '13px' }}>{item.icon}</span> {item.label}
-              </NavItem>
+          {/* Nav */}
+          <div style={{ padding: '8px 0' }}>
+            <p style={{
+              color: S.textSubtle,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              letterSpacing: '1.5px',
+              fontWeight: '700',
+              padding: '12px 16px 4px',
+            }}>Administración</p>
+            {NAV_ITEMS.map(item => (
+              <SideNavItem
+                key={item.id}
+                active={activeTab === item.id}
+                onClick={() => setActiveTab(item.id)}
+                icon={item.icon}
+                label={item.label}
+              />
             ))}
           </div>
         </div>
 
         {/* ── Contenido ── */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
+        <div style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '28px 32px',
+          background: S.bg,
+        }}>
 
           {/* ESTADÍSTICAS */}
           {activeTab === 'stats' && (
             <Section title="Estadísticas generales">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '20px' }}>
-                {GLOBAL_STATS.map((s,i) => (
-                  <div key={i} style={{ background: PANEL_BG, border: `1px solid ${BORDER}`, borderRadius: '3px', padding: '14px 16px' }}>
-                    <p style={{ color: TEXT_MUTED, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>{s.label}</p>
-                    <p style={{ color: TEXT_PRIMARY, fontSize: '22px', fontWeight: 'bold' }}>{s.value}</p>
+              {/* Cards métricas */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '14px', marginBottom: '24px' }}>
+                {GLOBAL_STATS.map((s, i) => (
+                  <div key={i} style={{
+                    background: S.surface,
+                    borderRadius: '8px',
+                    padding: '20px 16px',
+                    border: `1px solid ${S.border}`,
+                  }}>
+                    <p style={{ color: S.textMuted, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>{s.label}</p>
+                    <p style={{ color: S.text, fontSize: '28px', fontWeight: '700', margin: 0 }}>{s.value}</p>
                   </div>
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {/* Top canciones */}
-                <div style={{ background: PANEL_BG, border: `1px solid ${BORDER}`, borderRadius: '3px', padding: '14px 16px' }}>
-                  <p style={{ color: TEXT_MUTED, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Top canciones</p>
-                  {songs.slice(0,5).map((s,i) => (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '7px' }}>
-                      <span style={{ color: TEXT_MUTED, width: '14px', fontSize: '10px' }}>{i+1}</span>
-                      <span style={{ color: TEXT_LABEL, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
-                      <span style={{ color: GREEN, fontSize: '10px' }}>{s.plays.toLocaleString()}</span>
+                <div style={{ background: S.surface, borderRadius: '8px', padding: '20px', border: `1px solid ${S.border}` }}>
+                  <p style={{ color: S.textMuted, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px', fontWeight: '700' }}>Top canciones</p>
+                  {songs.slice(0, 5).map((s, i) => (
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                      <span style={{ color: S.textSubtle, width: '16px', fontSize: '12px', textAlign: 'right' }}>{i + 1}</span>
+                      <span style={{ color: S.text, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px' }}>{s.title}</span>
+                      <span style={{ color: S.green, fontSize: '12px', fontWeight: '600' }}>{s.plays.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Usuarios recientes */}
-                <div style={{ background: PANEL_BG, border: `1px solid ${BORDER}`, borderRadius: '3px', padding: '14px 16px' }}>
-                  <p style={{ color: TEXT_MUTED, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Usuarios recientes</p>
-                  {users.slice(0,4).map(u => (
-                    <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '7px' }}>
-                      <span style={{ fontSize: '12px' }}>👤</span>
-                      <span style={{ color: TEXT_LABEL, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</span>
-                      <span style={{ color: u.status === 'activo' ? GREEN : TEXT_MUTED, fontSize: '10px' }}>{u.status}</span>
+                <div style={{ background: S.surface, borderRadius: '8px', padding: '20px', border: `1px solid ${S.border}` }}>
+                  <p style={{ color: S.textMuted, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px', fontWeight: '700' }}>Usuarios recientes</p>
+                  {users.slice(0, 4).map(u => (
+                    <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: S.elevated, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}>👤</div>
+                      <span style={{ color: S.textMuted, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{u.email}</span>
+                      <span style={{
+                        color: u.status === 'activo' ? '#000' : S.textMuted,
+                        background: u.status === 'activo' ? S.green : S.elevated,
+                        fontSize: '10px',
+                        fontWeight: '700',
+                        padding: '2px 8px',
+                        borderRadius: '500px',
+                      }}>{u.status}</span>
                     </div>
                   ))}
                 </div>
@@ -169,73 +252,70 @@ export default function AdminPanel() {
           {/* USUARIOS */}
           {activeTab === 'users' && (
             <Section title={`Gestión de usuarios (${users.length})`}>
-              <div style={{ border: `1px solid ${BORDER}`, borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 90px 80px', padding: '5px 12px', background: 'linear-gradient(to bottom,#333,#2a2a2a)', color: TEXT_MUTED, fontSize: '10px', borderBottom: `1px solid ${BORDER}` }}>
-                  <span>Email</span><span>Rol</span><span>Registro</span><span>Estado</span><span>Acciones</span>
-                </div>
+              <TableWrap>
+                <TableHead cols="1fr 80px 100px 100px 90px"
+                  headers={['Email', 'Rol', 'Registro', 'Estado', 'Acciones']} />
                 {users.map((u, i) => (
-                  <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 90px 80px', padding: '6px 12px', background: i % 2 === 0 ? 'transparent' : '#1f1f1f', borderBottom: `1px solid ${BORDER}`, alignItems: 'center' }}>
-                    <span style={{ color: TEXT_PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</span>
+                  <TableRow key={u.id} cols="1fr 80px 100px 100px 90px" alt={i % 2 !== 0}>
+                    <span style={{ color: S.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</span>
                     <span>
-                      <span style={{ background: u.role === 'admin' ? '#3d7a22' : '#333', color: u.role === 'admin' ? '#fff' : TEXT_MUTED, fontSize: '9px', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>{u.role}</span>
+                      <Badge green={u.role === 'admin'}>{u.role}</Badge>
                     </span>
-                    <span style={{ color: TEXT_MUTED }}>{u.joined}</span>
-                    <span style={{ color: u.status === 'activo' ? GREEN : TEXT_MUTED }}>{u.status}</span>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button onClick={() => toggleRole(u.id)} title="Cambiar rol" style={iconBtnStyle}>⇄</button>
-                      <button onClick={() => deleteUser(u.id)} title="Eliminar" style={{ ...iconBtnStyle, color: '#c0392b' }}>✕</button>
+                    <span style={{ color: S.textMuted }}>{u.joined}</span>
+                    <span style={{ color: u.status === 'activo' ? S.green : S.textMuted }}>{u.status}</span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <IconBtn onClick={() => toggleRole(u.id)} title="Cambiar rol">⇄</IconBtn>
+                      <IconBtn onClick={() => deleteUser(u.id)} danger title="Eliminar">✕</IconBtn>
                     </div>
-                  </div>
+                  </TableRow>
                 ))}
-              </div>
-              <p style={{ color: TEXT_MUTED, fontSize: '10px', marginTop: '8px' }}>⇄ cambia rol entre user/admin &nbsp;·&nbsp; ✕ elimina el usuario</p>
+              </TableWrap>
+              <p style={{ color: S.textSubtle, fontSize: '11px', marginTop: '10px' }}>⇄ cambia rol entre user/admin · ✕ elimina el usuario</p>
             </Section>
           )}
 
           {/* CANCIONES */}
           {activeTab === 'songs' && (
             <Section title={`Catálogo de canciones (${songs.length})`}>
-              {/* Añadir */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                <input value={newSong.title}    onChange={e => setNewSong(p => ({ ...p, title:    e.target.value }))} placeholder="Título"    style={{ ...inputStyle, width: '160px' }} />
-                <input value={newSong.artist}   onChange={e => setNewSong(p => ({ ...p, artist:   e.target.value }))} placeholder="Artista"   style={{ ...inputStyle, width: '160px' }} />
-                <input value={newSong.duration} onChange={e => setNewSong(p => ({ ...p, duration: e.target.value }))} placeholder="Duración (ej. 3:45)" style={{ ...inputStyle, width: '130px' }} />
-                <button onClick={addSong} style={primaryBtnStyle}>+ Agregar</button>
+              {/* Form añadir */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <input value={newSong.title}    onChange={e => setNewSong(p => ({ ...p, title:    e.target.value }))} placeholder="Título"    style={{ ...css.input, width: '180px' }} />
+                <input value={newSong.artist}   onChange={e => setNewSong(p => ({ ...p, artist:   e.target.value }))} placeholder="Artista"   style={{ ...css.input, width: '180px' }} />
+                <input value={newSong.duration} onChange={e => setNewSong(p => ({ ...p, duration: e.target.value }))} placeholder="Duración (ej. 3:45)" style={{ ...css.input, width: '150px' }} />
+                <button onClick={addSong} style={css.btnGreen}>+ Agregar</button>
               </div>
 
-              <div style={{ border: `1px solid ${BORDER}`, borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 70px 70px 40px', padding: '5px 12px', background: 'linear-gradient(to bottom,#333,#2a2a2a)', color: TEXT_MUTED, fontSize: '10px', borderBottom: `1px solid ${BORDER}` }}>
-                  <span>Título</span><span>Artista</span><span>Duración</span><span>Plays</span><span></span>
-                </div>
+              <TableWrap>
+                <TableHead cols="1fr 1fr 80px 80px 48px"
+                  headers={['Título', 'Artista', 'Duración', 'Plays', '']} />
                 {songs.map((s, i) => (
-                  <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 70px 70px 40px', padding: '6px 12px', background: i % 2 === 0 ? 'transparent' : '#1f1f1f', borderBottom: `1px solid ${BORDER}`, alignItems: 'center' }}>
-                    <span style={{ color: TEXT_PRIMARY }}>{s.title}</span>
-                    <span style={{ color: TEXT_LABEL }}>{s.artist}</span>
-                    <span style={{ color: TEXT_MUTED }}>{s.duration}</span>
-                    <span style={{ color: GREEN }}>{s.plays.toLocaleString()}</span>
-                    <button onClick={() => deleteSong(s.id)} style={{ ...iconBtnStyle, color: RED }}>✕</button>
-                  </div>
+                  <TableRow key={s.id} cols="1fr 1fr 80px 80px 48px" alt={i % 2 !== 0}>
+                    <span style={{ color: S.text }}>{s.title}</span>
+                    <span style={{ color: S.textMuted }}>{s.artist}</span>
+                    <span style={{ color: S.textMuted }}>{s.duration}</span>
+                    <span style={{ color: S.green, fontWeight: '600' }}>{s.plays.toLocaleString()}</span>
+                    <IconBtn onClick={() => deleteSong(s.id)} danger>✕</IconBtn>
+                  </TableRow>
                 ))}
-              </div>
+              </TableWrap>
             </Section>
           )}
 
           {/* PLAYLISTS */}
           {activeTab === 'playlists' && (
             <Section title={`Gestión de playlists (${playlists.length})`}>
-              <div style={{ border: `1px solid ${BORDER}`, borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 70px 40px', padding: '5px 12px', background: 'linear-gradient(to bottom,#333,#2a2a2a)', color: TEXT_MUTED, fontSize: '10px', borderBottom: `1px solid ${BORDER}` }}>
-                  <span>Nombre</span><span>Propietario</span><span>Canciones</span><span></span>
-                </div>
+              <TableWrap>
+                <TableHead cols="1fr 1fr 90px 48px"
+                  headers={['Nombre', 'Propietario', 'Canciones', '']} />
                 {playlists.map((pl, i) => (
-                  <div key={pl.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 70px 40px', padding: '6px 12px', background: i % 2 === 0 ? 'transparent' : '#1f1f1f', borderBottom: `1px solid ${BORDER}`, alignItems: 'center' }}>
-                    <span style={{ color: GREEN }}>♪ {pl.name}</span>
-                    <span style={{ color: TEXT_LABEL, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pl.owner}</span>
-                    <span style={{ color: TEXT_MUTED }}>{pl.tracks} tracks</span>
-                    <button onClick={() => deletePlaylist(pl.id)} style={{ ...iconBtnStyle, color: RED }}>✕</button>
-                  </div>
+                  <TableRow key={pl.id} cols="1fr 1fr 90px 48px" alt={i % 2 !== 0}>
+                    <span style={{ color: S.green, fontWeight: '600' }}>♪ {pl.name}</span>
+                    <span style={{ color: S.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pl.owner}</span>
+                    <span style={{ color: S.textMuted }}>{pl.tracks} tracks</span>
+                    <IconBtn onClick={() => deletePlaylist(pl.id)} danger>✕</IconBtn>
+                  </TableRow>
                 ))}
-              </div>
+              </TableWrap>
             </Section>
           )}
 
@@ -245,15 +325,30 @@ export default function AdminPanel() {
   )
 }
 
-// ── Subcomponentes ─────────────────────────────────────────────
-function SideLabel({ children }) {
-  return <p style={{ color: '#666', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 'bold', padding: '6px 14px 2px' }}>{children}</p>
-}
-
-function NavItem({ active, onClick, children }) {
+/* ── Sub-componentes ─────────────────────────────────────────── */
+function SideNavItem({ active, onClick, icon, label }) {
+  const [hov, setHov] = useState(false)
   return (
-    <div onClick={onClick} style={{ padding: '4px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', background: active ? 'linear-gradient(to bottom,#4c9a2a,#3d7a22)' : 'transparent', color: active ? '#fff' : '#bbb', borderLeft: active ? `2px solid #6bcc44` : '2px solid transparent', margin: active ? '0 2px' : '0', borderRadius: active ? '2px' : '0', fontSize: '11px' }}>
-      {children}
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        padding: '10px 16px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        background: active ? '#282828' : hov ? '#121212' : 'transparent',
+        color: active || hov ? '#fff' : '#b3b3b3',
+        borderLeft: active ? `2px solid #1db954` : '2px solid transparent',
+        fontSize: '13px',
+        fontWeight: active ? '700' : '400',
+        transition: 'all 0.1s',
+      }}
+    >
+      <span style={{ fontSize: '16px' }}>{icon}</span>
+      {label}
     </div>
   )
 }
@@ -261,34 +356,148 @@ function NavItem({ active, onClick, children }) {
 function Section({ title, children }) {
   return (
     <div>
-      <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: '8px', marginBottom: '16px' }}>
-        <h2 style={{ color: TEXT_PRIMARY, fontSize: '13px', fontWeight: 'bold', margin: 0 }}>{title}</h2>
+      <div style={{ marginBottom: '24px' }}>
+        <h2 style={{
+          color: '#fff',
+          fontSize: '22px',
+          fontWeight: '700',
+          margin: '0 0 4px',
+          letterSpacing: '-0.3px',
+        }}>{title}</h2>
+        <div style={{ height: '1px', background: '#282828', marginTop: '12px' }} />
       </div>
       {children}
     </div>
   )
 }
 
-// ── Estilos compartidos ────────────────────────────────────────
-const inputStyle = {
-  background: '#1a1a1a', border: '1px solid #555', borderRadius: '3px',
-  color: TEXT_PRIMARY, fontSize: '11px', padding: '5px 8px', outline: 'none',
-  fontFamily: FONT, boxSizing: 'border-box',
+function TableWrap({ children }) {
+  return (
+    <div style={{
+      background: '#181818',
+      border: '1px solid #282828',
+      borderRadius: '8px',
+      overflow: 'hidden',
+    }}>
+      {children}
+    </div>
+  )
 }
 
-const primaryBtnStyle = {
-  background: 'linear-gradient(to bottom,#5bb030,#4c9a2a)', border: '1px solid #3d7a22',
-  borderRadius: '3px', color: '#fff', fontSize: '11px', fontWeight: 'bold',
-  padding: '5px 14px', cursor: 'pointer', fontFamily: FONT, whiteSpace: 'nowrap',
+function TableHead({ cols, headers }) {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: cols,
+      gap: '8px',
+      padding: '10px 16px',
+      background: '#000',
+      borderBottom: '1px solid #282828',
+      color: '#6a6a6a',
+      fontSize: '11px',
+      textTransform: 'uppercase',
+      letterSpacing: '1px',
+      fontWeight: '700',
+    }}>
+      {headers.map((h, i) => <span key={i}>{h}</span>)}
+    </div>
+  )
 }
 
-const sysBtnStyle = {
-  background: 'linear-gradient(to bottom,#4a4a4a,#333)', border: '1px solid #555',
-  borderRadius: '3px', color: TEXT_PRIMARY, cursor: 'pointer',
-  padding: '2px 10px', fontSize: '10px', fontFamily: FONT,
+function TableRow({ cols, children, alt }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: cols,
+        gap: '8px',
+        padding: '10px 16px',
+        background: hov ? 'rgba(255,255,255,0.05)' : alt ? '#1f1f1f' : 'transparent',
+        borderBottom: '1px solid #282828',
+        alignItems: 'center',
+        fontSize: '13px',
+        transition: 'background 0.1s',
+      }}
+    >
+      {children}
+    </div>
+  )
 }
 
-const iconBtnStyle = {
-  background: 'none', border: 'none', color: TEXT_MUTED,
-  cursor: 'pointer', fontSize: '12px', padding: '2px 4px',
+function Badge({ children, green }) {
+  return (
+    <span style={{
+      background: green ? '#1db954' : '#282828',
+      color: green ? '#000' : '#b3b3b3',
+      fontSize: '10px',
+      fontWeight: '700',
+      padding: '3px 10px',
+      borderRadius: '500px',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+    }}>{children}</span>
+  )
+}
+
+function IconBtn({ children, onClick, danger, title }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: hov ? (danger ? 'rgba(229,83,75,0.15)' : 'rgba(255,255,255,0.1)') : 'transparent',
+        border: 'none',
+        color: danger ? (hov ? '#e5534b' : '#6a6a6a') : (hov ? '#fff' : '#6a6a6a'),
+        cursor: 'pointer',
+        fontSize: '14px',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        transition: 'all 0.15s',
+      }}
+    >{children}</button>
+  )
+}
+
+/* ── Estilos compartidos ─────────────────────────────────────── */
+const css = {
+  input: {
+    background: '#242424',
+    border: '1px solid #535353',
+    borderRadius: '4px',
+    color: '#fff',
+    fontSize: '13px',
+    padding: '8px 12px',
+    outline: 'none',
+    fontFamily: "'Circular','Inter','Helvetica Neue',Helvetica,Arial,sans-serif",
+    boxSizing: 'border-box',
+  },
+  btnGreen: {
+    background: '#1db954',
+    border: 'none',
+    borderRadius: '500px',
+    color: '#000',
+    fontSize: '13px',
+    fontWeight: '700',
+    padding: '8px 20px',
+    cursor: 'pointer',
+    letterSpacing: '0.5px',
+    whiteSpace: 'nowrap',
+  },
+  sysBtn: {
+    background: 'transparent',
+    border: '1px solid #535353',
+    borderRadius: '500px',
+    color: '#b3b3b3',
+    cursor: 'pointer',
+    padding: '5px 16px',
+    fontSize: '12px',
+    fontFamily: "'Circular','Inter','Helvetica Neue',Helvetica,Arial,sans-serif",
+    transition: 'all 0.2s',
+  },
 }

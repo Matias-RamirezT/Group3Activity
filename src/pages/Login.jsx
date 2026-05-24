@@ -2,14 +2,21 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useNavigate, Link } from 'react-router-dom'
 
-const TEXT_MUTED = "#888"
-const TEXT_PRIMARY = "#e8e8e8"
-const GREEN = "#4c9a2a"
-const BORDER = "#3a3a3a"
+const S = {
+  green:     '#1db954',
+  bg:        '#121212',
+  surface:   '#000000',
+  elevated:  '#282828',
+  border:    '#282828',
+  text:      '#ffffff',
+  textMuted: '#b3b3b3',
+  textSubtle:'#6a6a6a',
+}
+const FONT = "'Circular','Inter','Helvetica Neue',Helvetica,Arial,sans-serif"
 
 function Login() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
 
   const handleLogin = async (e) => {
@@ -21,97 +28,91 @@ function Login() {
 
   return (
     <div style={{
-      background: "#1a1a1a",
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: "'Lucida Grande', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+      background: S.bg,
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: FONT,
     }}>
       <div style={{
-        background: "#111",
-        border: `1px solid ${BORDER}`,
-        borderRadius: "4px",
-        width: "320px",
-        overflow: "hidden",
+        background: S.surface,
+        borderRadius: '8px',
+        width: '340px',
+        overflow: 'hidden',
+        border: `1px solid ${S.border}`,
       }}>
 
-        {/* Header barra estilo titlebar */}
+        {/* Titlebar */}
         <div style={{
-          background: "linear-gradient(to bottom, #3a3a3a, #2c2c2c)",
-          padding: "0 10px",
-          height: "28px",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          borderBottom: "1px solid #111",
+          background: '#000',
+          height: '36px',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 12px',
+          borderBottom: `1px solid #1a1a1a`,
+          gap: '7px',
         }}>
-          {["#ff5f57", "#febc2e", "#28c840"].map((c, i) => (
-            <div key={i} style={{ width: "11px", height: "11px", borderRadius: "50%", background: c }} />
+          {['#ff5f57','#febc2e','#28c840'].map((c, i) => (
+            <div key={i} style={{ width: '12px', height: '12px', borderRadius: '50%', background: c }} />
           ))}
-          <span style={{ color: TEXT_MUTED, fontSize: "11px", marginLeft: "auto", marginRight: "auto" }}>
+          <span style={{ color: S.textSubtle, fontSize: '12px', marginLeft: 'auto', marginRight: 'auto', paddingRight: '31px' }}>
             Spotify — Iniciar sesión
           </span>
         </div>
 
-        {/* Logo */}
-        <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
-          <div style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "56px",
-            height: "56px",
-            background: GREEN,
-            borderRadius: "8px",
-            fontSize: "26px",
-          }}>🎵</div>
-          <p style={{ color: TEXT_MUTED, fontSize: "11px", marginTop: "8px" }}>Everyone Loves Music</p>
+        {/* Logo + tagline */}
+        <div style={{ textAlign: 'center', padding: '32px 24px 16px' }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill={S.green} style={{ display: 'block', margin: '0 auto 12px' }}>
+            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+          </svg>
+          <p style={{ color: S.text, fontSize: '22px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
+            Inicia sesión en Spotify
+          </p>
+          <p style={{ color: S.textMuted, fontSize: '13px', margin: 0 }}>Everyone loves music</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleLogin} style={{ padding: "16px 24px 24px" }}>
-          <div style={{ marginBottom: "10px" }}>
-            <label style={{ display: "block", color: TEXT_MUTED, fontSize: "10px", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Correo electrónico
-            </label>
+        <form onSubmit={handleLogin} style={{ padding: '8px 32px 24px' }}>
+          <FormField label="Correo electrónico">
             <input
               type="email"
               placeholder="usuario@ejemplo.com"
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               style={inputStyle}
             />
-          </div>
+          </FormField>
 
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", color: TEXT_MUTED, fontSize: "10px", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Contraseña
-            </label>
+          <FormField label="Contraseña">
             <input
               type="password"
-              placeholder="••••••••"
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Contraseña"
+              onChange={e => setPassword(e.target.value)}
               style={inputStyle}
             />
-          </div>
+          </FormField>
 
-          <button type="submit" style={primaryBtnStyle}>
-            Ingresar
-          </button>
+          <button type="submit" style={btnGreen}>Ingresar</button>
         </form>
+
+        {/* Divider */}
+        <div style={{ padding: '0 32px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ flex: 1, height: '1px', background: '#282828' }} />
+          <span style={{ color: S.textSubtle, fontSize: '12px' }}>o</span>
+          <div style={{ flex: 1, height: '1px', background: '#282828' }} />
+        </div>
 
         {/* Footer */}
         <div style={{
-          borderTop: `1px solid ${BORDER}`,
-          padding: "10px 24px",
-          display: "flex",
-          justifyContent: "center",
-          background: "#0e0e0e",
+          borderTop: `1px solid ${S.border}`,
+          padding: '16px 32px',
+          textAlign: 'center',
+          background: '#0a0a0a',
         }}>
-          <span style={{ color: TEXT_MUTED, fontSize: "11px" }}>
-            ¿No tienes cuenta?{" "}
-            <Link to="/register" style={{ color: GREEN, textDecoration: "none" }}>
-              Crear cuenta
+          <span style={{ color: S.textMuted, fontSize: '13px' }}>
+            ¿No tienes cuenta?{' '}
+            <Link to="/register" style={{ color: S.text, textDecoration: 'underline', fontWeight: '700' }}>
+              Regístrate en Spotify
             </Link>
           </span>
         </div>
@@ -122,29 +123,45 @@ function Login() {
 
 export default Login
 
-const inputStyle = {
-  width: "100%",
-  background: "#1a1a1a",
-  border: "1px solid #555",
-  borderRadius: "3px",
-  color: "#e8e8e8",
-  fontSize: "11px",
-  padding: "6px 8px",
-  outline: "none",
-  fontFamily: "'Lucida Grande', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-  boxSizing: "border-box",
+function FormField({ label, children }) {
+  return (
+    <div style={{ marginBottom: '16px' }}>
+      <label style={{
+        display: 'block',
+        color: '#fff',
+        fontSize: '13px',
+        fontWeight: '700',
+        marginBottom: '6px',
+      }}>{label}</label>
+      {children}
+    </div>
+  )
 }
 
-const primaryBtnStyle = {
-  width: "100%",
-  background: "linear-gradient(to bottom, #5bb030, #4c9a2a)",
-  border: "1px solid #3d7a22",
-  borderRadius: "3px",
-  color: "#fff",
-  fontSize: "12px",
-  fontWeight: "bold",
-  padding: "7px 0",
-  cursor: "pointer",
-  fontFamily: "'Lucida Grande', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-  letterSpacing: "0.02em",
+const inputStyle = {
+  width: '100%',
+  background: '#242424',
+  border: '1px solid #535353',
+  borderRadius: '4px',
+  color: '#fff',
+  fontSize: '14px',
+  padding: '10px 14px',
+  outline: 'none',
+  fontFamily: "'Circular','Inter','Helvetica Neue',Helvetica,Arial,sans-serif",
+  boxSizing: 'border-box',
+  caretColor: '#1db954',
+}
+
+const btnGreen = {
+  width: '100%',
+  background: '#1db954',
+  border: 'none',
+  borderRadius: '500px',
+  color: '#000',
+  fontSize: '14px',
+  fontWeight: '700',
+  padding: '14px 0',
+  cursor: 'pointer',
+  letterSpacing: '0.5px',
+  marginBottom: '24px',
 }
